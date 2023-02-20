@@ -1,0 +1,123 @@
+{% extends 'base.html' %}
+
+{% block title %}Home - SYSTEM MONITOR WEB APP{% endblock %}
+
+{% block content %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<div class='container'>
+    <div class='row'>
+        <div class="heading-title">
+            <div class="col top-card">
+                <h3 class="next-to-btn text-uppercase">CPU, Memory, and Process Monitoring</h3>
+                <button onclick="updateTimeseriesChart(true)">Refresh</button>
+            </div>
+        </div>
+    </div>
+    <div class="row top-card flex-wrapper-vertical">
+        <div>
+            <span>CPU COUNT: {{cpu_count}}</span>
+        </div>
+        <div>
+            <span>UPDATES: <em>every 1 minute</em></span>
+        </div>
+    </div>
+</div>
+<div id="charts-container" class="container flex-wrapper">
+    <div class="column">
+        <h5 class="text-uppercase text-center">Metrics in GB</h5>
+        <canvas id="timeseriesChartGB">SIMULATE TO GET STARTED</canvas>
+    </div>
+
+    <div class="column">
+        <h5 class="text-uppercase text-center">Metrics in %</h5>
+        <canvas id="timeseriesChartPercent">SIMULATE TO GET STARTED</canvas>
+    </div>
+</div>
+
+<hr>
+
+<script type="text/javascript">
+    const timeseriesChartGBEl = document.getElementById("timeseriesChartGB");
+    const timeseriesChartPercentEl = document.getElementById("timeseriesChartPercent");
+    let params = (new URL(document.location)).searchParams;
+    var cvGB;
+    var cvPercent;
+
+    function extractTimeWithTZ(d, truncate = true) {
+        return truncate ? (d.getHours() < 10 ? "0" + d.getHours() : d.getHours()) + " : " + d.getMinutes() + ": " + d.getSeconds() + "." + d.getMilliseconds() : d;
+    }
+    function queryParamToBool(value) {
+        return ((value + '').toLowerCase() === 'true')
+    }
+    function updateTimeseriesChart(destroy = false) {
+        fetch("/historical", {
+            method: "GET"
+        })
+            .then(response => response.json())
+            .then(data => {
+                const available = data.map(o => { return { x: o.available, x: o.time } });
+                const cpuPercent = data.map(o => { return { y: o.cpu_percent, x: o.time } });
+                const free = data.map(o => { return { y: o.free, x: o.time } });
+                const usagePercent = data.map(o => { return { y: o.usage_percent, x: o.time } });
+                const total = data.map(o => { return { y: o.total, x: o.time } });
+                const used = data.map(o => { return { y: o.used, x: o.time } });
+                const time = data.map(o => extractTimeWithTZ(new Date(o.time * 1000), queryParamToBool(params.get('truncate'))));
+
+                const labelsGB = ["total", "available", "usage_percent", "used", "free", "cpu_percent"];
+                if (destroy) {
+                    console.log("DESTROYING");
+                    cvGB.destroy();
+                    cvPercent.destroy();
+                }
+                cvGB = new Chart(timeseriesChartGBEl, {
+                    type: 'line',
+                    data: {
+                        datasets: [
+                            { data: total, label: "total" },
+                            { data: available, label: "available" },
+                            { data: used, label: "used" },
+                            { data: free, label: "free" }
+                        ],
+                        labels: time,
+                    },
+                });
+
+                const labelsPercent = ["usage_percent", "cpu_percent"];
+                cvPercent = new Chart(timeseriesChartPercentEl, {
+                    type: 'line',
+                    data: {
+                        datasets: [
+                            { data: cpuPercent, label: "CPU %" },
+                            { data: usagePercent, label: "Memory Usage %" },
+                        ],
+                        labels: time,
+                    }
+                });
+            }
+            )
+
+    }
+
+    updateTimeseriesChart();
+    // Automatically update every minute
+    var interval = setInterval(function () { updateTimeseriesChart(true); }, 60 * 1000);
+
+    function toggleChartContainerStyle() {
+        var chContainer = document.getElementById("charts-container");
+        if (window.innerWidth < 1240) {
+            chContainer.classList.remove('flex-wrapper-horizontal');
+            chContainer.classList.add('flex-wrapper-vertical');
+        } else {
+            chContainer.classList.add('flex-wrapper-horizontal');
+            chContainer.classList.remove('flex-wrapper-vertical');
+        }
+    }
+    window.addEventListener('resize', function (e) {
+        console.log(e.target.innerWidth)
+        toggleChartContainerStyle();
+    })
+    toggleChartContainerStyle();
+</script>
+
+{% endblock %}

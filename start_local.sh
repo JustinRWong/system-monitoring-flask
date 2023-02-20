@@ -1,0 +1,1 @@
+export FLASK_DEBUG=1 && cd server/src && flask run

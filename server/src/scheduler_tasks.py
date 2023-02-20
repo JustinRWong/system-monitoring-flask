@@ -1,7 +1,9 @@
 import psutil
 from apscheduler.schedulers.background import BackgroundScheduler
 from max_size_dict import MaxSizeLRU
+
 from constants import *
+from alert import alert
 
 IN_MEMORY_HISTORICAL_USAGE = MaxSizeLRU(30)
 
@@ -23,6 +25,8 @@ def get_system_stats():
         "free": memory.free/BYTES_PER_GB,  # GB
         "cpu_percent": cpu_percent  # GB
     }
+    # if memory.percent < ALERT_MEMORY_PERCENT_THRESHOLD or cpu_percent < ALERT_CPU_PERCENT_THRESHOLD:
+    #     alert(ALERT_PHONE_NUMBER, f"CPU or memory is lower than threshold\n- CPU: {cpu_percent}%\n- MEMORY: {memory.percent}%")
     IN_MEMORY_HISTORICAL_USAGE.store(item
                                      )
     print('STORED: ', item)
@@ -30,5 +34,5 @@ def get_system_stats():
 
 scheduler = BackgroundScheduler()
 # Automatically store last 30 minbutes
-scheduler.add_job(func=get_system_stats, trigger="interval", seconds=5)
+scheduler.add_job(func=get_system_stats, trigger="interval", seconds=REFRESH_INTERVAL_IN_SECONDS)
 scheduler.start()

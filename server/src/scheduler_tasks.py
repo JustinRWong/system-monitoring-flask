@@ -3,7 +3,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from max_size_dict import MaxSizeLRU
 
 from constants import *
-from alert import alert
+# from alert import alert
 
 IN_MEMORY_HISTORICAL_USAGE = MaxSizeLRU(30)
 

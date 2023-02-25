@@ -25,13 +25,17 @@
 </div>
 <div id="charts-container" class="container flex-wrapper">
     <div class="column">
-        <h5 class="text-uppercase text-center">Metrics in GB</h5>
-        <canvas id="timeseriesChartGB">SIMULATE TO GET STARTED</canvas>
+        <h5 class="text-uppercase text-center">Memory Usage Stats in GB</h5>
+        <div class="chart-container">
+            <canvas id="timeseriesChartGB">SIMULATE TO GET STARTED</canvas>
+        </div>
     </div>
 
     <div class="column">
-        <h5 class="text-uppercase text-center">Metrics in %</h5>
-        <canvas id="timeseriesChartPercent">SIMULATE TO GET STARTED</canvas>
+        <h5 class="text-uppercase text-center">Usage %</h5>
+        <div class="chart-container">
+            <canvas id="timeseriesChartPercent">SIMULATE TO GET STARTED</canvas>
+        </div>
     </div>
 </div>
 
@@ -56,7 +60,7 @@
         })
             .then(response => response.json())
             .then(data => {
-                const available = data.map(o => { return { x: o.available, x: o.time } });
+                const available = data.map(o => { return { y: o.available, x: o.time } });
                 const cpuPercent = data.map(o => { return { y: o.cpu_percent, x: o.time } });
                 const free = data.map(o => { return { y: o.free, x: o.time } });
                 const usagePercent = data.map(o => { return { y: o.usage_percent, x: o.time } });
@@ -81,6 +85,10 @@
                         ],
                         labels: time,
                     },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false
+                    }
                 });
 
                 const labelsPercent = ["usage_percent", "cpu_percent"];
@@ -88,10 +96,14 @@
                     type: 'line',
                     data: {
                         datasets: [
-                            { data: cpuPercent, label: "CPU %" },
+                            { data: cpuPercent, label: "CPU Usage %" },
                             { data: usagePercent, label: "Memory Usage %" },
                         ],
                         labels: time,
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false
                     }
                 });
             }
